@@ -1,26 +1,26 @@
 <script lang="ts">
-	import Input from './input.svelte';
+	import { modes } from '$lib';
+	import type { mode_type } from '$lib';
+	import type { SvelteComponent } from 'svelte';
+
+	import Input from '../components/input.svelte';
+	import Output from '../components/output.svelte';
+
 	let questions: string[] = [];
 	let answers: string[] = [];
-	$: {
-		console.log('questions in parent', questions);
-	}
 
-	const modes = {
-		INPUT: 'INPUT',
-		OUTPUT: 'OUTPUT'
-	} as const;
+	let mode: mode_type = modes.INPUT;
 
-	let mode = modes.INPUT;
-	let currentComponent = Input;
-	if (mode === modes.INPUT) {
-		currentComponent = Input;
-	} else if (mode === modes.OUTPUT) {
-		//currentComponent = Output;
-		console.log('output');
+	function setMode(newMode: mode_type) {
+		console.log('set mode', newMode);
+		mode = newMode;
 	}
 </script>
 
 <slot>
-	<Input bind:questions bind:answers />
+	{#if mode === modes.INPUT}
+		<Input bind:questions bind:answers {setMode} />
+	{:else if mode === modes.OUTPUT}
+		<Output {questions} {answers} {setMode} />
+	{/if}
 </slot>
