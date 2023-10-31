@@ -1,24 +1,47 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
 	import { modes, type mode_type } from '$lib';
+	import { browser } from '$app/environment';
 
-	let wordList = '';
 	export let questions: string[] = [];
 	export let answers: string[] = [];
 	let wordSeparator = ';';
 	let cardSeparator = '\n';
-
 	let output = '';
+	console.log('component root', wordSeparator, cardSeparator, output);
+
+	let readFromStorage = false;
 
 	export let setMode: (newMode: mode_type) => void;
+
+	onMount(() => {
+		if (browser) {
+			const outputStored = localStorage.getItem('outputStored');
+			if (outputStored === null) {
+				return;
+			}
+			const {
+				output: storedOutput,
+				wordSeparator: storedWordSeparator,
+				cardSeparator: storedCardSeparator
+			} = JSON.parse(outputStored);
+			output = storedOutput;
+			wordSeparator = storedWordSeparator;
+			cardSeparator = storedCardSeparator;
+			readFromStorage = true;
+			console.log('read from output storage', outputStored);
+		}
+	});
 
 	interface card {
 		question: string;
 		answer: string;
 	}
 
-	$: {
+	function assembleOutput() {
 		if (questions.length !== answers.length) {
 			console.warn('question and answer length mismatch', questions.length, answers.length);
+			return;
 		}
 		let cards: card[] = [];
 		for (let i = 0; i < questions.length; i++) {
@@ -26,6 +49,15 @@
 		}
 		for (const card of cards) {
 			output += `${card.question}${wordSeparator}${card.answer}${cardSeparator}`;
+		}
+		console.log('end of assemble method', output);
+	}
+
+	$: {
+		if (browser && readFromStorage) {
+			let outputStored = { output, wordSeparator, cardSeparator };
+			localStorage.setItem('outputStored', JSON.stringify(outputStored));
+			assembleOutput();
 		}
 	}
 </script>

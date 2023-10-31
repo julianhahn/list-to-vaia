@@ -11,6 +11,10 @@
 
 	let mode: mode_type = modes.INPUT;
 
+	$: {
+		console.log('questions', questions);
+		console.log('answers', answers);
+	}
 	function setMode(newMode: mode_type) {
 		console.log('set mode', newMode);
 		mode = newMode;

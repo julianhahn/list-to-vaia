@@ -10,51 +10,46 @@
 	let wordSeparator = ' ';
 	let cardSeparator = '\n';
 	let wordList = '';
-	console.log('run after asign');
 	let readFromStorage = false;
 
 	onMount(() => {
 		if (browser) {
-			console.log(localStorage.length);
-
-			const localStorageWordSeparator = localStorage.getItem('wordSeparator');
-			const localStorageCardSeparator = localStorage.getItem('cardSeparator');
-			const localStorageWordList = localStorage.getItem('wordList');
-			console.log('run on mount');
-			console.log('wordlist from local storage' + localStorageWordList);
-
-			if (localStorageWordSeparator) {
-				wordSeparator = localStorageWordSeparator;
+			const inputStored = localStorage.getItem('inputStored');
+			if (inputStored === null) {
+				return;
 			}
 
-			if (localStorageCardSeparator) {
-				cardSeparator = localStorageCardSeparator;
-			}
-
-			if (localStorageWordList) {
-				wordList = localStorageWordList;
-			}
+			const {
+				wordList: storedWordList,
+				wordSeparator: storedWordSeparator,
+				cardSeparator: storedCardSeparator
+			} = JSON.parse(inputStored);
+			wordList = storedWordList;
+			wordSeparator = storedWordSeparator;
+			cardSeparator = storedCardSeparator;
+			readFromStorage = true;
 			parseWordList();
 			readFromStorage = true;
 		}
 	});
 
-	onDestroy(() => {
-		if (browser) {
-			console.log('saving to local storage');
-			localStorage.setItem('wordSeparator', wordSeparator);
-			localStorage.setItem('cardSeparator', cardSeparator);
-			localStorage.setItem('wordList', wordList);
-		}
-	});
+	onDestroy(() => {});
 
 	function parseWordList() {
+		if (!wordList || wordList.length === 0 || wordList === '') {
+			return;
+		}
 		let cards = wordList.split(cardSeparator);
+		let newQuestions: string[] = [];
+		let newAnswers: string[] = [];
 		for (const card of cards) {
 			let [question, answer] = card.split(wordSeparator);
-			questions.push(question);
-			answers.push(answer);
+			newQuestions.push(question);
+			newAnswers.push(answer);
 		}
+		questions = newQuestions;
+		answers = newAnswers;
+
 		if (questions.length > 10) {
 			questions = questions.slice(0, 10);
 			answers = answers.slice(0, 10);
@@ -63,10 +58,11 @@
 
 	$: {
 		if (browser && readFromStorage) {
-			console.log('on change set local storage');
-			localStorage.setItem('wordSeparator', wordSeparator);
-			localStorage.setItem('cardSeparator', cardSeparator);
-			localStorage.setItem('wordList', wordList);
+			if (browser) {
+				const checkedCardSeparator = cardSeparator === '\\n' ? '\n' : cardSeparator;
+				let inputStored = { wordList, wordSeparator, cardSeparator: checkedCardSeparator };
+				localStorage.setItem('inputStored', JSON.stringify(inputStored));
+			}
 			parseWordList();
 		}
 	}
