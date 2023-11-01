@@ -39,6 +39,13 @@
 	<div class="title">list to vaia</div>
 	<div class="input-wrapper">
 		<textarea value={outputText} class="input-text" />
+		<button
+			on:click={() => {
+				cardSeparator = 'vaia';
+				wordSeparator = '/#*#/';
+			}}
+			class="preset-button">fill in for vaia</button
+		>
 		<div class="controlGroup">
 			<div class="word-seperator-input">
 				<div class="input-label">word separator</div>
@@ -95,6 +102,11 @@
 			flex-grow: 1;
 			display: flex;
 			flex-direction: column;
+
+			.preset-button {
+				width: 30%;
+				margin-top: 1rem;
+			}
 
 			.input-text {
 				border: solid 1px black;
