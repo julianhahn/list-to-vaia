@@ -1,71 +1,44 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
 	import { modes, type mode_type } from '$lib';
-	import { browser } from '$app/environment';
+	export let output: {
+		wordSeparator: string;
+		cardSeparator: string;
+	};
 
-	export let questions: string[] = [];
-	export let answers: string[] = [];
-	let wordSeparator = ';';
-	let cardSeparator = '\n';
-	let output = '';
-	console.log('component root', wordSeparator, cardSeparator, output);
+	export let cardList: { question: string; answer: string }[] = [];
 
-	let readFromStorage = false;
+	let wordSeparator = output.wordSeparator;
+	let cardSeparator = output.cardSeparator;
+	let outputText = '';
 
 	export let setMode: (newMode: mode_type) => void;
+	export let updateOutput: (wordSeparator: string, cardSeparator: string) => void;
 
-	onMount(() => {
-		if (browser) {
-			const outputStored = localStorage.getItem('outputStored');
-			if (outputStored === null) {
-				return;
-			}
-			const {
-				output: storedOutput,
-				wordSeparator: storedWordSeparator,
-				cardSeparator: storedCardSeparator
-			} = JSON.parse(outputStored);
-			output = storedOutput;
-			wordSeparator = storedWordSeparator;
-			cardSeparator = storedCardSeparator;
-			readFromStorage = true;
-			console.log('read from output storage', outputStored);
+	$: {
+		if (wordSeparator !== output.wordSeparator || cardSeparator !== output.cardSeparator) {
+			if (cardSeparator === '\\n') cardSeparator = '\r\n';
+			if (cardSeparator === '\n') cardSeparator = '\r\n';
+			if (cardSeparator === 'vaia') cardSeparator = '\r\n\\#\r\n';
+			updateOutput(wordSeparator, cardSeparator);
 		}
-	});
-
-	interface card {
-		question: string;
-		answer: string;
-	}
-
-	function assembleOutput() {
-		if (questions.length !== answers.length) {
-			console.warn('question and answer length mismatch', questions.length, answers.length);
-			return;
-		}
-		let cards: card[] = [];
-		for (let i = 0; i < questions.length; i++) {
-			cards.push({ question: questions[i], answer: answers[i] });
-		}
-		for (const card of cards) {
-			output += `${card.question}${wordSeparator}${card.answer}${cardSeparator}`;
-		}
-		console.log('end of assemble method', output);
+		outputText = '';
 	}
 
 	$: {
-		if (browser && readFromStorage) {
-			let outputStored = { output, wordSeparator, cardSeparator };
-			localStorage.setItem('outputStored', JSON.stringify(outputStored));
-			assembleOutput();
-		}
+		cardList.forEach((card, index) => {
+			if (index < cardList.length - 1) {
+				outputText += card.answer + wordSeparator + card.question + cardSeparator;
+			} else {
+				outputText += card.answer + wordSeparator + card.question;
+			}
+		});
 	}
 </script>
 
 <div class="content">
 	<div class="title">list to vaia</div>
 	<div class="input-wrapper">
-		<textarea bind:value={output} class="input-text" />
+		<textarea value={outputText} class="input-text" />
 		<div class="controlGroup">
 			<div class="word-seperator-input">
 				<div class="input-label">word separator</div>
@@ -80,7 +53,7 @@
 				<input
 					type="text"
 					bind:value={cardSeparator}
-					placeholder={cardSeparator === '\n' ? 'new line' : cardSeparator}
+					placeholder={cardSeparator === '\\n' ? 'new line' : cardSeparator}
 				/>
 			</div>
 		</div>

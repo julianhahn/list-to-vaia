@@ -1,69 +1,25 @@
 <script lang="ts">
 	import { modes, type mode_type } from '$lib';
-	import { onMount, onDestroy } from 'svelte';
-	import { browser } from '$app/environment';
-
-	export let questions: string[] = [];
-	export let answers: string[] = [];
-
+	import { onMount } from 'svelte';
 	export let setMode: (newMode: mode_type) => void;
-	let wordSeparator = ' ';
-	let cardSeparator = '\n';
-	let wordList = '';
-	let readFromStorage = false;
+	export let updateInput: (wordList: string, wordSeparator: string, cardSeparator: string) => void;
+	export let input: {
+		wordList: string;
+		wordSeparator: string;
+		cardSeparator: string;
+	};
 
-	onMount(() => {
-		if (browser) {
-			const inputStored = localStorage.getItem('inputStored');
-			if (inputStored === null) {
-				return;
-			}
-
-			const {
-				wordList: storedWordList,
-				wordSeparator: storedWordSeparator,
-				cardSeparator: storedCardSeparator
-			} = JSON.parse(inputStored);
-			wordList = storedWordList;
-			wordSeparator = storedWordSeparator;
-			cardSeparator = storedCardSeparator;
-			readFromStorage = true;
-			parseWordList();
-			readFromStorage = true;
-		}
-	});
-
-	onDestroy(() => {});
-
-	function parseWordList() {
-		if (!wordList || wordList.length === 0 || wordList === '') {
-			return;
-		}
-		let cards = wordList.split(cardSeparator);
-		let newQuestions: string[] = [];
-		let newAnswers: string[] = [];
-		for (const card of cards) {
-			let [question, answer] = card.split(wordSeparator);
-			newQuestions.push(question);
-			newAnswers.push(answer);
-		}
-		questions = newQuestions;
-		answers = newAnswers;
-
-		if (questions.length > 10) {
-			questions = questions.slice(0, 10);
-			answers = answers.slice(0, 10);
-		}
-	}
+	let wordList = input.wordList;
+	let wordSeparator = input.wordSeparator;
+	let cardSeparator = input.cardSeparator;
 
 	$: {
-		if (browser && readFromStorage) {
-			if (browser) {
-				const checkedCardSeparator = cardSeparator === '\\n' ? '\n' : cardSeparator;
-				let inputStored = { wordList, wordSeparator, cardSeparator: checkedCardSeparator };
-				localStorage.setItem('inputStored', JSON.stringify(inputStored));
-			}
-			parseWordList();
+		if (
+			wordList !== input.wordList ||
+			wordSeparator !== input.wordSeparator ||
+			cardSeparator !== input.cardSeparator
+		) {
+			updateInput(wordList, wordSeparator, cardSeparator);
 		}
 	}
 </script>
